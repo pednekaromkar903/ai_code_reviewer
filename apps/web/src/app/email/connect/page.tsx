@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Mail, Shield, CheckCircle2, Loader2, ExternalLink } from 'lucide-react';
 import { api } from '@/lib/api';

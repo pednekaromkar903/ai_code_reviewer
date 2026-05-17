@@ -6,7 +6,6 @@ const router = Router();
 
 router.use(authenticate);
 
-// Re-added authentication
 router.get('/events', calendarController.getCalendarEvents);
 router.post('/events', calendarController.createCalendarEvent);
 

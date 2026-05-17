@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { 
   Search, Filter, ChevronDown, ChevronUp, User, 
@@ -331,5 +331,3 @@ export default function EmailInboxPage() {
     </Layout>
   );
 }
-
-import React from 'react';

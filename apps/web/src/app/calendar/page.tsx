@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import { Plus, Calendar as CalendarIcon, Info, X } from 'lucide-react';
-import axios from 'axios';
+import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
 
@@ -44,9 +44,7 @@ export default function CalendarPage() {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/v1/calendar/events', {
-        withCredentials: true
-      });
+      const response = await api.get('/calendar/events');
       const formattedEvents = response.data.events.map((e: any) => ({
         ...e,
         start: new Date(e.date),
@@ -68,12 +66,12 @@ export default function CalendarPage() {
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/v1/calendar/events', {
+      await api.post('/calendar/events', {
         title: newTitle,
         date: newDate,
         type: newType,
         notes: newNotes
-      }, { withCredentials: true });
+      });
       
       toast.success('Event added successfully');
       setIsModalOpen(false);
