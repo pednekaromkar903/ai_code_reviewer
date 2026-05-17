@@ -27,3 +27,4 @@ To deploy the Next.js frontend to Vercel:
 2. The monorepo setup dictates setting the root directory to `apps/web`.
 3. The build command is natively picked up by Vercel (`npm run build`).
 
+# atomquest_goal_portal
