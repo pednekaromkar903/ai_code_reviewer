@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_1 = require("../../middleware/auth");
+const cycles_controller_1 = require("./cycles.controller");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticate);
+router.get('/', cycles_controller_1.getCycles);
+router.get('/active', cycles_controller_1.getActiveCycle);
+router.put('/:id/status', (0, auth_1.authorize)(['ADMIN']), cycles_controller_1.updateCycleStatus);
+exports.default = router;

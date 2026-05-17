@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_1 = require("../../middleware/auth");
+const goals_controller_1 = require("./goals.controller");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticate);
+router.get('/', goals_controller_1.getGoals);
+router.post('/', goals_controller_1.createGoal);
+router.patch('/:id', goals_controller_1.updateGoal);
+router.post('/shared', (0, auth_1.authorize)(['ADMIN', 'MANAGER']), goals_controller_1.createSharedGoal);
+router.put('/:id/submit', goals_controller_1.submitGoal);
+router.put('/:id/approve', (0, auth_1.authorize)(['MANAGER', 'ADMIN']), goals_controller_1.approveGoal);
+router.put('/:id/reject', (0, auth_1.authorize)(['MANAGER', 'ADMIN']), goals_controller_1.rejectGoal);
+router.put('/:id/admin-unlock', (0, auth_1.authorize)(['ADMIN']), goals_controller_1.adminUnlock);
+exports.default = router;

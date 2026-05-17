@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_1 = require("../../middleware/auth");
+const intelligence_controller_1 = require("./intelligence.controller");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticate);
+router.post('/connect/test', (0, auth_1.authorize)(['ADMIN', 'MANAGER']), intelligence_controller_1.testConnection);
+router.post('/connect/save', (0, auth_1.authorize)(['ADMIN']), intelligence_controller_1.saveConnection);
+router.get('/connect', intelligence_controller_1.getConnection);
+router.get('/schema', intelligence_controller_1.getSchema);
+router.post('/query', intelligence_controller_1.queryIntelligence);
+router.get('/goals', intelligence_controller_1.getLegacyGoals);
+exports.default = router;

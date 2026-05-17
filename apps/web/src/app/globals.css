@@ -1,0 +1,35 @@
+@import "react-big-calendar/lib/css/react-big-calendar.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply bg-slate-50 text-slate-900;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 transition-colors;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 transition-colors;
+  }
+  .card {
+    @apply rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5;
+  }
+  .input {
+    @apply block w-full rounded-lg border-0 py-2.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-slate-900 sm:text-sm sm:leading-6;
+  }
+  .label {
+    @apply block text-sm font-medium leading-6 text-slate-900;
+  }
+  .btn-atomberg {
+    @apply inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-atomberg-gold to-atomberg-gold-dark px-4 py-2.5 text-sm font-semibold text-atomberg-black shadow-md hover:brightness-105 transition-all;
+  }
+}
