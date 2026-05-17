@@ -67,9 +67,10 @@ export default function ManagerCheckinsPage() {
           <p className="text-slate-500 mt-1">Planned vs Actual — Q2 2026 quarterly review</p>
         </div>
 
-        <div className="card overflow-hidden">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+        <div className="card overflow-hidden px-0">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Employee</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Goal</th>
@@ -99,11 +100,11 @@ export default function ManagerCheckinsPage() {
               ))}
             </tbody>
           </table>
+          </div>
           {checkIns.length === 0 && (
-            <p className="px-6 py-12 text-center text-slate-400">No check-ins recorded yet.</p>
+          <p className="px-6 py-12 text-center text-slate-400">No check-ins recorded yet.</p>
           )}
-        </div>
-
+          </div>
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <MessageSquare size={20} /> Manager Discussion Logs

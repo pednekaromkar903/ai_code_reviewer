@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const checkin_controller_1 = require("./checkin.controller");
+const auth_1 = require("../../middleware/auth");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticate);
+router.post('/', checkin_controller_1.createCheckIn);
+router.get('/', checkin_controller_1.getEmployeeCheckIns);
+router.get('/employee/:id', checkin_controller_1.getEmployeeCheckIns);
+exports.default = router;

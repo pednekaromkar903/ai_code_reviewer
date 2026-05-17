@@ -202,16 +202,26 @@ class AIService {
         }
         // Default / General
         else {
-            summary = `🤖 Hi! I'm Atomberg Intelligence. I can help you with:
-
-• **Completion rates** — *"What is my completion rate?"*
-• **Behind target analysis** — *"Why is my team behind?"*
-• **Weightage validation** — *"Validate my goal weights"*
-• **Quarter comparison** — *"Compare Q1 vs Q2"*
-• **Team performance** — *"Show my team performance"*
-• **Department insights** — *"How is manufacturing doing?"*
-
-What would you like to know?`;
+            if (process.env.GEMINI_API_KEY) {
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: query }] }]
+                        })
+                    });
+                    const result = await response.json();
+                    summary = result.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from Gemini.';
+                }
+                catch (error) {
+                    console.error('Gemini error:', error);
+                    summary = 'Error connecting to Gemini API.';
+                }
+            }
+            else {
+                summary = 'AI service is currently in demo mode. Connect your Gemini API key in .env to enable full responses.';
+            }
             suggestedActions = ['Show Completion Rate', 'Check Team Status', 'Validate Goals'];
         }
         return { intent, data, summary, suggestedActions };

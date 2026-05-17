@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs",
+  "ignoreCommand": "bash -c 'if [ \"$VERCEL_ENV\" = \"production\" ]; then exit 1; else exit 0; fi'",
+  "installCommand": "npm install && npx prisma generate --schema=packages/database/prisma/schema.prisma"
+}

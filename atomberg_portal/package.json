@@ -1,0 +1,24 @@
+{
+  "name": "atomberg-portal",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "cd apps/api && npm run dev",
+    "dev:web": "cd apps/web && npm run dev",
+    "setup": "bash scripts/setup.sh",
+    "db:push": "cd packages/database && npx prisma db push",
+    "db:seed": "cd packages/database && npx ts-node --compiler-options '{\"module\":\"CommonJS\"}' seed.ts",
+    "db:studio": "cd packages/database && npx prisma studio",
+    "db:generate": "cd packages/database && npx prisma generate",
+    "build": "cd apps/web && npm run build && cd ../api && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,64 +1,57 @@
-# Atomberg Goal Portal — Architecture
+# Architecture Overview
 
-This document describes the high-level architecture of the Atomberg Goal Portal.
+## Tech Stack
+- **Frontend:** Next.js 14 (App Router), React, Tailwind CSS, Lucide Icons, Recharts
+- **Backend:** Express.js (Node.js API)
+- **Database:** PostgreSQL
+- **ORM:** Prisma
+- **AI/LLM:** Google Gemini API (with local Ollama fallback/support)
 
-## Architecture Diagram
+## Folder Structure (Monorepo)
+The project is structured as a monorepo containing three main workspaces:
+- `apps/web/`: The Next.js frontend application.
+- `apps/api/`: The Express.js backend API.
+- `packages/database/`: The shared Prisma schema, migrations, and seed scripts.
 
-```mermaid
-graph TD
-    %% Frontend Layer
-    subgraph Frontend ["Next.js 14 Frontend"]
-        UI[React Components / UI]
-        NextAPI[Next.js API Routes / Proxy]
-    end
+## Authentication Flow
+The application uses a **JWT-based authentication flow**.
+- Users log in via the `/api/v1/auth/login` endpoint on the Express backend.
+- Upon successful authentication, the backend generates a JWT token containing the user's ID and Role.
+- The frontend stores this token (in localStorage/cookies) and attaches it to the `Authorization: Bearer <token>` header of subsequent API requests via an Axios interceptor.
+- Backend routes are protected using the `authenticate` middleware, which verifies the JWT before processing the request.
 
-    %% Backend Layer
-    subgraph Backend ["Express Backend"]
-        Express[Express.js REST API]
-        AuthMiddleware[JWT Auth Middleware]
-        EmailPipeline[Email Intelligence Pipeline]
-        Classifier[Email Classifier]
-    end
+## Database Schema Summary
+Key models in the PostgreSQL database:
+- **User:** Represents employees, managers, and admins in the system.
+- **Goal:** Core strategic objectives assigned to users, tracking planned vs. actual progress.
+- **Cycle:** Time-bound planning periods (e.g., Q2 2026) that group goals and check-ins.
+- **CheckIn:** Periodic updates on goal progress, including manager feedback and computed scores.
+- **CustomerEmail:** AI-processed support tickets with sentiment, category, and priority classification.
+- **CalendarEvent:** Manual reminders and system-generated events (like goal deadlines and check-ins) displayed on the frontend calendar.
 
-    %% Database & Data Layer
-    subgraph DataLayer ["Data Layer"]
-        Prisma[Prisma ORM]
-        Postgres[(PostgreSQL)]
-        Redis[(Redis Cache)]
-    end
+## How to Run Locally
+Ensure you have Node.js and PostgreSQL installed.
 
-    %% External Services
-    subgraph External ["External Services"]
-        Ollama((Ollama AI Service - Optional/Fallback))
-        GmailOAuth((Gmail OAuth API))
-    end
+1. **Install dependencies:**
+   ```bash
+   npm run install:all
+   ```
+2. **Environment Variables:**
+   Create `.env` files in `apps/api`, `apps/web`, and `packages/database` matching `.env.example`.
+3. **Database Setup:**
+   ```bash
+   npm run db:push
+   npm run db:seed
+   ```
+4. **Start Development Servers:**
+   ```bash
+   npm run dev
+   ```
+   *This concurrently starts the Express API (port 5000) and Next.js Web (port 3000).*
 
-    %% Connections
-    UI -->|HTTP Requests| NextAPI
-    NextAPI -->|API Calls| AuthMiddleware
-    AuthMiddleware --> Express
-    
-    %% Database connections
-    Express --> Prisma
-    Prisma --> Postgres
-    Express -.->|Cache| Redis
-    
-    %% Email Pipeline
-    GmailOAuth -->|Fetch Emails| EmailPipeline
-    EmailPipeline --> Classifier
-    Classifier --> Prisma
-    Express -->|Read Emails| EmailPipeline
-    UI -->|Dashboard Data| Express
-    
-    %% AI Connection
-    NextAPI -.->|Proxy| Ollama
-    Express -.->|Fallback Analytics| Ollama
-```
-
-## System Components
-
-- **Frontend:** Built with Next.js 14 (App Router), React, and Tailwind CSS.
-- **Backend:** Express.js REST API with Prisma ORM.
-- **Database:** PostgreSQL container for robust relational data storage.
-- **AI Integration:** Local inference powered by Ollama (gemma3 model) gracefully degrading to backend mock endpoints.
-- **Email Intelligence:** Pipeline consuming Gmail OAuth, passing content through a classifier, storing structured data in DB, and served to the Dashboard.
+## Deployment Notes (Vercel)
+This monorepo is configured for easy deployment on Vercel:
+- **Root `vercel.json`**: Instructs Vercel to build the `apps/web` directory and run the `npm run build` command.
+- **Next.js Config**: `apps/web/next.config.js` is set to `output: 'standalone'` to optimize the build size.
+- **Prisma Generation**: The root `package.json` includes a `postinstall` script (`npm run db:generate`) to ensure the Prisma Client is available immediately during the Vercel build phase, preventing `PrismaClientInitializationError`.
+- **Environment Variables**: Make sure to add `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, etc., to your Vercel Project Settings.

@@ -1,0 +1,24 @@
+{
+  "name": "atomberg-goal-portal",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "npm --prefix ./apps/api run dev",
+    "dev:web": "npm --prefix ./apps/web run dev",
+    "db:push": "npm --prefix ./packages/database run db:push",
+    "db:seed": "npm --prefix ./packages/database run db:seed",
+    "db:generate": "npm --prefix ./packages/database run db:generate",
+    "db:studio": "npm --prefix ./packages/database run db:studio",
+    "install:all": "npm install && npm --prefix ./apps/api install && npm --prefix ./apps/web install && npm --prefix ./packages/database install",
+    "postinstall": "npm run db:generate"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prisma": "^5.10.0",
+    "typescript": "^5.3.3"
+  }
+}

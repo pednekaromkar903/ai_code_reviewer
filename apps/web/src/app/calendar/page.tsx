@@ -42,16 +42,17 @@ export default function CalendarPage() {
   const [newType, setNewType] = useState('manual');
   const [newNotes, setNewNotes] = useState('');
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (signal?: AbortSignal) => {
     try {
-      const response = await api.get('/calendar/events');
+      const response = await api.get('/calendar/events', { signal });
       const formattedEvents = response.data.events.map((e: any) => ({
         ...e,
         start: new Date(e.date),
         end: new Date(e.date), // For simplicity in month view
       }));
       setEvents(formattedEvents);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.message === 'canceled' || error.code === 'ERR_CANCELED') return;
       console.error('Failed to fetch events:', error);
       toast.error('Failed to load calendar events');
     } finally {
@@ -60,7 +61,9 @@ export default function CalendarPage() {
   };
 
   useEffect(() => {
-    fetchEvents();
+    const controller = new AbortController();
+    fetchEvents(controller.signal);
+    return () => controller.abort();
   }, []);
 
   const handleAddEvent = async (e: React.FormEvent) => {

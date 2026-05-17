@@ -121,107 +121,34 @@ export function IntelligenceChat({ mode = 'full', onClose }: IntelligenceChatPro
     setLoadingStep(0);
 
     try {
-      if (isOfflineMode) {
-        try {
-          const fallbackRes = await api.post('/ai/query', { query: q });
-          setMessages((m) => [
-            ...m,
-            { 
-              role: 'ai', 
-              content: fallbackRes.data.summary, 
-              sql: fallbackRes.data.sql,
-              data: fallbackRes.data.data || [],
-              intent: fallbackRes.data.intent || 'MOCK_RESPONSE',
-              chartType: fallbackRes.data.chartType,
-              steps: [{ step: '1', label: 'Used AI Fallback Mode', done: true }]
-            },
-          ]);
-          return;
-        } catch (fallbackErr) {
-          await new Promise(r => setTimeout(r, 1500)); // Simulate delay
-          const responseText = getMockResponse(q);
-          setMessages((m) => [
-            ...m,
-            {
-              role: 'ai',
-              content: responseText,
-              sql: null,
-              data: [],
-              intent: 'MOCK_RESPONSE',
-              steps: [{ step: '1', label: 'Used AI Fallback Mode', done: true }]
-            },
-          ]);
-          return;
-        }
-      }
-
-      const model = process.env.NEXT_PUBLIC_OLLAMA_MODEL || 'gemma3';
-      const response = await fetch('/api/ollama', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: model,
-          prompt: q,
-        })
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Ollama connection failed');
-      }
-      
-      const d = await response.json();
-      
+      const res = await api.post('/ai/query', { query: q });
       setMessages((m) => [
         ...m,
         {
           role: 'ai',
-          content: d.response,
-          sql: null,
-          data: [],
-          chartType: undefined,
-          followUps: [],
-          suggestedActions: [],
-          steps: [
-            { step: '1', label: 'Connected to local Ollama', done: true },
-            { step: '2', label: `Using model ${model}`, done: true },
-            { step: '3', label: 'Inference complete', done: true }
-          ],
-          intent: 'LLM_GENERATION',
+          content: res.data.summary || 'No response',
+          sql: res.data.sql,
+          data: res.data.data || [],
+          intent: res.data.intent || 'GENERAL',
+          chartType: res.data.chartType,
+          followUps: res.data.suggestedActions || [],
+          steps: res.data.steps || [{ step: '1', label: 'Processed by Atomberg Intelligence', done: true }]
         },
       ]);
     } catch (err: any) {
-      console.error('Ollama Error:', err);
-      // Fallback to offline mode on error
-      setIsOfflineMode(true);
-      try {
-        const fallbackRes = await api.post('/ai/query', { query: q });
-        setMessages((m) => [
-          ...m,
-          { 
-            role: 'ai', 
-            content: fallbackRes.data.summary, 
-            sql: fallbackRes.data.sql,
-            data: fallbackRes.data.data || [],
-            intent: fallbackRes.data.intent || 'MOCK_RESPONSE',
-            chartType: fallbackRes.data.chartType,
-            steps: [{ step: '1', label: 'Used AI Fallback Mode', done: true }]
-          },
-        ]);
-      } catch (fallbackErr) {
-        const responseText = getMockResponse(q);
-        setMessages((m) => [
-          ...m,
-          { 
-            role: 'ai', 
-            content: responseText, 
-            sql: null,
-            data: [],
-            intent: 'MOCK_RESPONSE',
-            steps: [{ step: '1', label: 'Used AI Fallback Mode', done: true }]
-          },
-        ]);
-      }
+      console.error('Chat Error:', err);
+      const responseText = getMockResponse(q);
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'ai',
+          content: responseText,
+          sql: null,
+          data: [],
+          intent: 'MOCK_RESPONSE',
+          steps: [{ step: '1', label: 'Used AI Fallback Mode', done: true }]
+        },
+      ]);
     } finally {
       setLoading(false);
     }

@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+enum CategoryLifecycle {
+  MATURE
+  GROWTH
+  NEW
+}
+
+enum GoalPhase {
+  GOAL_SETTING
+  Q1
+  Q2
+  Q3
+  Q4
+}
+
+enum GoalStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum UomType {
+  MIN
+  MAX
+  TIMELINE
+  ZERO
+}
+
+enum GoalProgressStatus {
+  NOT_STARTED
+  ON_TRACK
+  COMPLETED
+}
+
+enum CategoryType {
+  RND
+  MANUFACTURING
+  B2B
+  RETAIL
+  D2C
+  PROCUREMENT
+}
+
+enum ActionType {
+  EDIT
+  APPROVAL
+  UNLOCK
+}
+
+enum AIInteractionRole {
+  USER
+  AI
+}
+
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  passwordHash  String
+  name          String
+  role          Role        @default(EMPLOYEE)
+  departmentId  String
+  department    Department  @relation(fields: [departmentId], references: [id])
+  managerId     String?
+  manager       User?       @relation("ManagerToEmployee", fields: [managerId], references: [id])
+  reports       User[]      @relation("ManagerToEmployee")
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  goals         Goal[]
+  escalations   Escalation[]
+  messages      ChatMessage[]
+}
+
+model Department {
+  id                String            @id @default(cuid())
+  name              String
+  thrustArea        String
+  categoryLifecycle CategoryLifecycle @default(GROWTH)
+  createdAt         DateTime          @default(now())
+  users             User[]
+}
+
+model GoalCycle {
+  id        String    @id @default(cuid())
+  name      String
+  phase     GoalPhase @default(GOAL_SETTING)
+  status    GoalStatus @default(ACTIVE)
+  startDate DateTime
+  endDate   DateTime
+  checkIns  CheckIn[]
+}
+
+model Goal {
+  id            String             @id @default(cuid())
+  employeeId    String
+  employee      User               @relation(fields: [employeeId], references: [id])
+  title         String
+  description   String
+  thrustArea    String
+  uomType       UomType
+  targetValue   Decimal
+  actualValue   Decimal            @default(0)
+  weightage     Int
+  status        GoalProgressStatus @default(NOT_STARTED)
+  categoryType  CategoryType
+  channelType   String?
+  isShared      Boolean            @default(false)
+  parentGoalId  String?
+  parentGoal    Goal?              @relation("SharedGoals", fields: [parentGoalId], references: [id])
+  childGoals    Goal[]             @relation("SharedGoals")
+  lockedAt      DateTime?
+  approvedBy    String?
+  approvedAt    DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  checkIns      CheckIn[]
+  auditLogs     AuditLog[]
+}
+
+model CheckIn {
+  id             String             @id @default(cuid())
+  goalId         String
+  goal           Goal               @relation(fields: [goalId], references: [id])
+  cycleId        String
+  cycle          GoalCycle          @relation(fields: [cycleId], references: [id])
+  quarter        GoalPhase
+  plannedValue   Decimal
+  actualValue    Decimal
+  status         GoalProgressStatus @default(NOT_STARTED)
+  managerComment String?
+  computedScore  Decimal            @default(0)
+  checkInDate    DateTime           @default(now())
+}
+
+model AuditLog {
+  id          String     @id @default(cuid())
+  goalId      String
+  goal        Goal       @relation(fields: [goalId], references: [id])
+  changedBy   String
+  fieldName   String
+  oldValue    String?
+  newValue    String?
+  actionType  ActionType
+  ipAddress   String?
+  changedAt   DateTime   @default(now())
+}
+
+model Escalation {
+  id              String    @id @default(cuid())
+  triggerType     String
+  triggeredForId  String
+  escalationLevel Int
+  message         String
+  notifiedUserIds String[]
+  isResolved      Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  resolvedAt      DateTime?
+  user            User      @relation(fields: [triggeredForId], references: [id])
+}
+
+model ChatMessage {
+  id         String            @id @default(cuid())
+  userId     String
+  user       User              @relation(fields: [userId], references: [id])
+  role       AIInteractionRole
+  content    String
+  intentType String?
+  metadata   Json?
+  createdAt  DateTime          @default(now())
+}

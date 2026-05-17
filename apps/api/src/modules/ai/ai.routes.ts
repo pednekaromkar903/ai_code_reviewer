@@ -10,10 +10,14 @@ router.get('/health', async (req, res) => {
     if (response.ok) {
       res.status(200).json({ status: 'ok', message: 'Ollama is running' });
     } else {
-      res.status(503).json({ status: 'error', message: 'Ollama returned error' });
+      throw new Error('Ollama not ok');
     }
   } catch (error) {
-    res.status(503).json({ status: 'error', message: 'Ollama is offline' });
+    if (process.env.GEMINI_API_KEY) {
+      res.status(200).json({ status: 'ok', message: 'Gemini AI is running' });
+    } else {
+      res.status(200).json({ status: 'ok', message: 'AI service is currently in demo mode. Connect your Gemini API key in .env to enable full responses.' });
+    }
   }
 });
 

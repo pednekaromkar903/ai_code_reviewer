@@ -1,0 +1,355 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  role          Role
+  departmentId  String
+  managerId     String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+
+  department    Department @relation(fields: [departmentId], references: [id])
+  manager       User?      @relation("ManagerRelation", fields: [managerId], references: [id])
+  subordinates  User[]     @relation("ManagerRelation")
+  goals         Goal[]
+  auditLogs     AuditLog[]
+  chatMessages  ChatMessage[]
+  escalations   Escalation[]
+  notifications Notification[]
+  ideas         InnovationIdea[]
+  ideaComments  IdeaComment[]
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  description String
+  type        String   // reminder, tech, system, sap
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CalendarEvent {
+  id          String   @id @default(uuid())
+  title       String
+  date        DateTime
+  type        String   // goal, checkin, cycle, manual
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model InnovationIdea {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  submittedBy String
+  department  String
+  upvotes     Int      @default(0)
+  impactScore Int      @default(0)
+  status      String   @default("IDEAS") // IDEAS, IN_PROGRESS, IMPLEMENTED
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [submittedBy], references: [id])
+  comments    IdeaComment[]
+}
+
+model IdeaComment {
+  id          String   @id @default(uuid())
+  ideaId      String
+  userId      String
+  content     String
+  createdAt   DateTime @default(now())
+
+  idea        InnovationIdea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  user        User           @relation(fields: [userId], references: [id])
+}
+
+model TechRadarEntry {
+  id             String   @id @default(uuid())
+  name           String
+  relevanceScore Int
+  adoptionStage  String   // Research, Pilot, Scaling, Adopted, Mandatory
+  description    String
+  impact         String
+  adaptationPlan String?  // Store as JSON or stringified checklist
+  createdAt      DateTime @default(now())
+}
+
+model SapEmployee {
+  pernr      String   @id
+  name       String
+  orgUnit    String
+  costCenter String
+  department String
+  role       String
+  email      String?
+}
+
+model SapDepartment {
+  id   String @id
+  name String
+}
+
+model SapProductionMetric {
+  id            String   @id @default(uuid())
+  month         String
+  unitsProduced Int
+  efficiency    Decimal  @db.Decimal(5, 2)
+  defectRate    Decimal  @db.Decimal(5, 2)
+}
+
+model SapSalesMetric {
+  id       String  @id @default(uuid())
+  month    String
+  region   String
+  revenue  Decimal @db.Decimal(14, 2)
+  channel  String  // B2B, B2C
+}
+
+model Department {
+  id                String   @id @default(uuid())
+  name              String   @unique
+  thrustArea        String
+  categoryLifecycle String   @default("MATURE")
+  users             User[]
+}
+
+model GoalCycle {
+  id        String   @id @default(uuid())
+  name      String
+  phase     String
+  status    String   @default("ACTIVE")
+  startDate DateTime
+  endDate   DateTime
+  goals     Goal[]
+  checkIns  CheckIn[]
+}
+
+model Goal {
+  id            String     @id @default(uuid())
+  cycleId       String?
+  employeeId    String
+  title         String
+  description   String?
+  thrustArea    String
+  uomType       UoMType
+  targetValue   Decimal    @default(0) @db.Decimal(10, 2)
+  actualValue   Decimal    @default(0) @db.Decimal(10, 2)
+  weightage     Int
+  status        GoalStatus @default(NOT_STARTED)
+  categoryType  String     @default("RND")
+  channelType   String?
+  isShared      Boolean    @default(false)
+  parentGoalId  String?
+  lockedAt      DateTime?
+  approvedBy    String?
+  approvedAt    DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  employee      User       @relation(fields: [employeeId], references: [id])
+  cycle         GoalCycle? @relation(fields: [cycleId], references: [id])
+  checkIns      CheckIn[]
+  auditLogs     AuditLog[]
+}
+
+model CheckIn {
+  id             String        @id @default(uuid())
+  goalId         String
+  cycleId        String?
+  quarter        String
+  plannedValue   Decimal       @default(0) @db.Decimal(10, 2)
+  actualValue    Decimal       @default(0) @db.Decimal(10, 2)
+  status         CheckInStatus @default(NOT_STARTED)
+  managerComment String?
+  computedScore  Decimal       @default(0) @db.Decimal(10, 4)
+  checkInDate    DateTime      @default(now())
+
+  goal           Goal          @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  cycle          GoalCycle?    @relation(fields: [cycleId], references: [id])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  goalId      String
+  changedBy   String
+  fieldName   String
+  oldValue    String?
+  newValue    String?
+  actionType  String
+  ipAddress   String?
+  changedAt   DateTime @default(now())
+
+  goal        Goal     @relation(fields: [goalId], references: [id])
+  user        User     @relation(fields: [changedBy], references: [id])
+}
+
+model Escalation {
+  id              String   @id @default(uuid())
+  triggerType     String
+  triggeredForId  String
+  escalationLevel Int      @default(1)
+  message         String
+  isResolved      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  resolvedAt      DateTime?
+
+  user            User     @relation(fields: [triggeredForId], references: [id])
+}
+
+model ChatMessage {
+  id         String   @id @default(uuid())
+  userId     String
+  role       String
+  content    String
+  intentType String?
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model DbConnection {
+  id           String   @id @default(uuid())
+  name         String   @default("Atomberg Legacy DB")
+  dbType       String   @default("postgresql")
+  host         String
+  port         Int      @default(5432)
+  database     String
+  username     String
+  isActive     Boolean  @default(true)
+  isReadOnly   Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ManufacturingDaily {
+  id             String   @id @default(uuid())
+  date           DateTime @db.Date
+  lineId         Int
+  unitsProduced  Int
+  rejectionRate  Decimal  @db.Decimal(6, 4)
+  energyKwh      Decimal  @db.Decimal(10, 2)
+
+  @@index([date, lineId])
+  @@map("manufacturing_daily")
+}
+
+model SalesMonthly {
+  id         String   @id @default(uuid())
+  month      DateTime @db.Date
+  channel    String
+  revenue    Decimal  @db.Decimal(14, 2)
+  unitsSold  Int
+  region     String
+
+  @@index([month, channel])
+  @@map("sales_monthly")
+}
+
+model LegacyEmployee {
+  id           String  @id @default(uuid())
+  name         String
+  department   String
+  managerId    String?
+  role         String
+
+  goals        LegacyGoal[]
+
+  @@map("legacy_employees")
+}
+
+model LegacyGoal {
+  id          String   @id @default(uuid())
+  employeeId  String
+  title       String
+  target      Decimal  @db.Decimal(10, 2)
+  actual      Decimal  @db.Decimal(10, 2)
+  quarter     String
+
+  employee    LegacyEmployee @relation(fields: [employeeId], references: [id])
+
+  @@map("legacy_goals")
+}
+
+model EmailIntegration {
+  id          String   @id @default(uuid())
+  userId      String   // Employee/Manager who connected their email
+  email       String   // e.g., support@atomberg.com or manager@atomberg.com
+  provider    String   // GMAIL, OUTLOOK, IMAP
+  accessToken String?  // OAuth token
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CustomerEmail {
+  id            String   @id @default(uuid())
+  integrationId String
+  sender        String   // customer@email.com
+  subject       String
+  body          String   @db.Text
+  receivedAt    DateTime
+  category      String   // PRODUCT_QUALITY, DELIVERY, INSTALLATION, BILLING, WARRANTY, NOISE_MOTOR, SMART_FEATURES, PACKAGING, OTHER
+  sentiment     String   // ANGRY, FRUSTRATED, NEUTRAL, SATISFIED
+  priority      String   // HIGH, MEDIUM, LOW
+  isComplaint   Boolean  @default(false)
+  isResolved    Boolean  @default(false)
+  assignedTo    String?  // Manager ID
+  resolution    String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ComplaintReport {
+  id            String   @id @default(uuid())
+  period        String   // WEEKLY, MONTHLY
+  startDate     DateTime
+  endDate       DateTime
+  totalEmails   Int
+  complaints    Int
+  byCategory    Json     // { PRODUCT_QUALITY: 23, DELIVERY: 15, ... }
+  bySentiment   Json     // { ANGRY: 10, FRUSTRATED: 20, ... }
+  trends        Json     // { vsLastPeriod: "+15%", topIssue: "NOISE_MOTOR" }
+  insights      String   @db.Text // AI-generated summary
+  generatedAt   DateTime @default(now())
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+enum UoMType {
+  MIN
+  MAX
+  TIMELINE
+  ZERO
+}
+
+enum GoalStatus {
+  NOT_STARTED
+  ON_TRACK
+  COMPLETED
+  PENDING
+}
+
+enum CheckInStatus {
+  NOT_STARTED
+  ON_TRACK
+  COMPLETED
+}

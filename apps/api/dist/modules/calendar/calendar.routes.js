@@ -38,7 +38,6 @@ const calendarController = __importStar(require("./calendar.controller"));
 const auth_1 = require("../../middleware/auth");
 const router = (0, express_1.Router)();
 router.use(auth_1.authenticate);
-// Re-added authentication
 router.get('/events', calendarController.getCalendarEvents);
 router.post('/events', calendarController.createCalendarEvent);
 exports.default = router;

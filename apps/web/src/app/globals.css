@@ -33,3 +33,20 @@
     @apply inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-atomberg-gold to-atomberg-gold-dark px-4 py-2.5 text-sm font-semibold text-atomberg-black shadow-md hover:brightness-105 transition-all;
   }
 }
+
+/* React Big Calendar mobile responsiveness */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  .rbc-toolbar-label {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+  }
+  .rbc-btn-group {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+}
